@@ -5,6 +5,8 @@ from remi import start, App
 import os
 import threading
 
+CHANNEL_REMAP = [2] # map channel to 0
+
 class MyApp(App):
     def __init__(self, *args):
         super(MyApp, self).__init__(*args)
@@ -20,7 +22,7 @@ class MyApp(App):
         container = gui.VBox(width='450px', height='540px')
 
         # Title
-        self.lbl = gui.Label("Yim's Robotic Band")
+        self.lbl = gui.Label("Prof. Yim's Robotic Band")
         self.lbl.style['font-size'] = '20px'
         container.append(self.lbl)
 
@@ -58,10 +60,6 @@ class MyApp(App):
         self.bt.onclick.connect(self.btn_pressed)
         self.bt.style['font-size'] = '25px'
         container.append(self.bt)
-        self.line_contatiner = gui.Svg(width='100%',height='10px')
-        self.line = gui.SvgLine(10,0,0,200)
-        self.line_contatiner.append(self.line)
-        container.append(self.line_contatiner)
 
         # Play Information
         self.info = gui.Label('-')
@@ -70,7 +68,7 @@ class MyApp(App):
         container.append(self.progress)
         self.table = gui.TableWidget(17, 4, True, True, width='100%')
         self.table.style['font-size'] = '14px'
-        self.table.style['text-align'] = 'center'   # TODO: text alignment
+        self.table.style['align-items'] = 'center'   # TODO: text alignment
         self.table.item_at(0,0).set_text("Channel")
         self.table.item_at(0,1).set_text("Note")
         self.table.item_at(0,2).set_text("Velocity")
@@ -116,6 +114,7 @@ class MyApp(App):
 
         filename = self.select_music_dropdown.get_value()
         self.info.set_text("Loading: " + filename)
+        self.bt.set_enabled(False)
         mid = mido.MidiFile("song/" + filename)
         length = mid.length
         time = 0.0
@@ -125,12 +124,13 @@ class MyApp(App):
                 return
             time = time + msg.time
             if (msg.type == "note_on"):
+                self.bt.set_enabled(True)
                 self.info.set_text("Playing: " + filename) # {Channel:%d, Note: %d, Time: %.2f}"%(msg.channel, msg.note, time))
                 self.table.item_at(msg.channel+1,1).set_text("%d"%msg.note)
                 self.table.item_at(msg.channel+1,2).set_text("%d"%msg.velocity)
                 self.table.item_at(msg.channel+1,3).set_text("%.2f s"%time)
                 if ser is not None:
-                    if (msg.channel == 2):
+                    if (msg.channel in CHANNEL_REMAP):
                         b = bytearray([0, msg.note, msg.velocity,ord('\n'),ord('\r')])
                         print("channel: %d, note: %d, vel: %d"%(msg.channel, msg.note, msg.velocity))
                         ser.write(b)
