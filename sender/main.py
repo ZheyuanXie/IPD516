@@ -6,6 +6,8 @@ import os
 import threading
 from multiprocessing import Process, Pipe
 
+CHANNEL_MAPPING = {2:0, 9:9}
+
 def midi_process(filename, com_port, pipe):
     try:
         ser = serial.Serial(com_port, baudrate=115200)  # open serial port
@@ -17,25 +19,14 @@ def midi_process(filename, com_port, pipe):
     length = mid.length
     time = 0.0
     for msg in mid.play():
-        # print(msg.type)
         time = time + msg.time
         if (msg.type == "note_on"):
-            pipe.send([msg.channel, msg.note, msg.velocity, time, 1000*(time/length)])
-            if ser is not None:
-                if (filename == "John Lee Hooker - Boom Boom Boom.mid"):
-                    if (msg.channel == 0):
-                        pass
-                    elif (msg.channel == 2):
-                        b = bytearray([0, msg.note, msg.velocity,ord('\n'),ord('\r')])
-                        print("channel: %d, note: %d, vel: %d"%(msg.channel, msg.note, msg.velocity))
-                        ser.write(b)
-                    elif (msg.channel == 9):
-                        b = bytearray([9, msg.note, msg.velocity,ord('\n'),ord('\r')])
-                        print("channel: %d, note: %d, vel: %d"%(msg.channel, msg.note, msg.velocity))
-                        ser.write(b)
-                elif (msg.channel == 9 or msg.channel == 0):
-                    b = bytearray([msg.channel , msg.note, msg.velocity,ord('\n'),ord('\r')])
-                    print("channel: %d, note: %d, vel: %d"%(msg.channel, msg.note, msg.velocity))
+            if CHANNEL_MAPPING.get(msg.channel) is not None:
+                mapped_ch = CHANNEL_MAPPING[msg.channel]
+                pipe.send([mapped_ch, msg.note, msg.velocity, time, 1000*(time/length)])
+                if ser is not None:               
+                    b = bytearray([mapped_ch, msg.note, msg.velocity,ord('\n'),ord('\r')])
+                    print("channel: %d, note: %d, vel: %d"%(mapped_ch, msg.note, msg.velocity))
                     ser.write(b)
     return
 
@@ -86,6 +77,18 @@ class MyApp(App):
         self.select_music_hbox.append(self.select_music_dropdown)
         self.select_music_hbox.append(self.select_music_refresh_btn)
         container.append(self.select_music_hbox)
+
+        # # channel mapping
+        # self.channel_grid_index = gui.HBox(width = '100%', style={'margin':'0px auto'})
+        # # self.channel_grid = gui.HBox(width = '100%', style={'margin':'0px auto'})
+        # self.channel_grid = gui.GridBox()
+        # self.channel_checkboxs = []
+        # for i in range(3):
+        #     self.channel_checkboxs.append(gui.CheckBox())
+        #     self.channel_grid.append({str(i):self.channel_checkboxs[i]})
+        #     self.channel_grid.append({str(i+3):gui.Label(str(i))})
+        # # container.append(self.channel_grid_index)
+        # container.append(self.channel_grid)
 
         # Play/Stop Button
         self.bt = gui.Button('Start', width = '50%', height = '50px')
