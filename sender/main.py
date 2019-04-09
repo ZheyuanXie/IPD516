@@ -4,8 +4,40 @@ import remi.gui as gui
 from remi import start, App
 import os
 import threading
+from multiprocessing import Process, Pipe
 
-CHANNEL_REMAP = [2] # map channel to 0
+def midi_process(filename, com_port, pipe):
+    try:
+        ser = serial.Serial(com_port, baudrate=115200)  # open serial port
+    except Exception:
+        print("Error Opening Serial.")
+        ser = None
+    print("midi process starting")
+    mid = mido.MidiFile("song/" + filename)
+    length = mid.length
+    time = 0.0
+    for msg in mid.play():
+        # print(msg.type)
+        time = time + msg.time
+        if (msg.type == "note_on"):
+            pipe.send([msg.channel, msg.note, msg.velocity, time, 1000*(time/length)])
+            if ser is not None:
+                if (filename == "John Lee Hooker - Boom Boom Boom.mid"):
+                    if (msg.channel == 0):
+                        pass
+                    elif (msg.channel == 2):
+                        b = bytearray([0, msg.note, msg.velocity,ord('\n'),ord('\r')])
+                        print("channel: %d, note: %d, vel: %d"%(msg.channel, msg.note, msg.velocity))
+                        ser.write(b)
+                    elif (msg.channel == 9):
+                        b = bytearray([9, msg.note, msg.velocity,ord('\n'),ord('\r')])
+                        print("channel: %d, note: %d, vel: %d"%(msg.channel, msg.note, msg.velocity))
+                        ser.write(b)
+                elif (msg.channel == 9 or msg.channel == 0):
+                    b = bytearray([msg.channel , msg.note, msg.velocity,ord('\n'),ord('\r')])
+                    print("channel: %d, note: %d, vel: %d"%(msg.channel, msg.note, msg.velocity))
+                    ser.write(b)
+    return
 
 class MyApp(App):
     def __init__(self, *args):
@@ -78,78 +110,63 @@ class MyApp(App):
         container.append(self.table)
         
         # MIDI Parser Thread
+        self.mprocess = None
         self.mthread = None
-        self.mthread_stop = False
+        self.is_playing = False
+        self.pipe = None
 
         # returning the root widget
         self.container = container
         return self.container
 
     def btn_pressed(self, widget):
-        if self.mthread is not None:
-            self.mthread_stop = True
+        if self.mprocess is not None:
+            print("Stop")
+            self.is_playing = False
             self.mthread.join()
             self.mthread = None
-            self.bt.set_text("Start")
-            self.info.set_text('Stopped')
         else:
-            self.mthread = threading.Thread(None, self.midi_thread, None)
-            self.mthread_stop = False
+            print("Start")
+            tx, rx = Pipe()         # open a pipe for inter-process communication
+            self.pipe = (tx, rx)
+            self.is_playing = True
+            self.mthread = threading.Thread(None, self.gui_thread, None)
+            self.mprocess = Process(target = midi_process, \
+                args=(self.select_music_dropdown.get_value(), \
+                    self.select_port_dropdown.get_value(), tx))
+            self.mprocess.start()
             self.mthread.start()
             self.bt.set_text("Stop")
-        
     
-    def midi_thread(self):
-        print("midi thread starting")
+    def gui_thread(self):
         for i in range(16):
             for j in range(3):
                 self.table.item_at(i+1,j+1).set_text("")
-
-        try:
-            ser_port = self.select_port_dropdown.get_value()
-            ser = serial.Serial(ser_port, baudrate=115200)  # open serial port
-        except Exception:
-            print("Error Opening Serial.")
-            ser = None
-
-        filename = self.select_music_dropdown.get_value()
-        self.info.set_text("Loading: " + filename)
-        self.bt.set_enabled(False)
-        mid = mido.MidiFile("song/" + filename)
-        length = mid.length
-        time = 0.0
-        for msg in mid.play():
-            if self.mthread_stop:
-                print("midi thread terminating")
-                return
-            time = time + msg.time
-            if (msg.type == "note_on"):
-                self.bt.set_enabled(True)
-                self.info.set_text("Playing: " + filename) # {Channel:%d, Note: %d, Time: %.2f}"%(msg.channel, msg.note, time))
-                self.table.item_at(msg.channel+1,1).set_text("%d"%msg.note)
-                self.table.item_at(msg.channel+1,2).set_text("%d"%msg.velocity)
-                self.table.item_at(msg.channel+1,3).set_text("%.2f s"%time)
-                if ser is not None:
-                    if (msg.channel in CHANNEL_REMAP):
-                        b = bytearray([0, msg.note, msg.velocity,ord('\n'),ord('\r')])
-                        print("channel: %d, note: %d, vel: %d"%(msg.channel, msg.note, msg.velocity))
-                        ser.write(b)
-                    else:
-                        b = bytearray([msg.channel , msg.note, msg.velocity,ord('\n'),ord('\r')])
-                        print("channel: %d, note: %d, vel: %d"%(msg.channel, msg.note, msg.velocity))
-                        ser.write(b)
-                self.progress.set_value(int(1000*(time/length)))
-                self.do_gui_update()
+        while(self.is_playing == True):
+            if (self.pipe[1].poll()):
+                recv = self.pipe[1].recv()
+                channel, note, velocity = recv[0], recv[1], recv[2]
+                time, progress = recv[3], recv[4]
+                if (velocity > 0):
+                    self.table.item_at(channel+1,1).set_text("%d"%note)
+                    self.table.item_at(channel+1,2).set_text("%d"%velocity)
+                    self.table.item_at(channel+1,3).set_text("%.2f s"%time)
+                self.progress.set_value(progress)
+            if (not self.mprocess.is_alive()):      # if the midi process reaches its end
+                self.mprocess.join()
+                self.is_playing = False
+        if (self.mprocess.is_alive()):              # if the midi process is still playing 
+            self.mprocess.terminate()
+        self.pipe[0].close()    # close sender pipe connections
+        self.pipe[1].close()    # close receiver pipe connections
+        self.mprocess = None
         self.bt.set_text("Start")
-        self.info.set_text('Stopped')
-        return
     
     def on_close(self):
         print("closing...")
-        if self.mthread is not None:
-            self.mthread_stop = True
+        if (self.is_playing):
+            self.is_playing = False
             self.mthread.join()
-            print("force stopping midi thread")
         return super().on_close()
 
 if __name__ == "__main__":
