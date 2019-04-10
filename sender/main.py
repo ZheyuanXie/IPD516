@@ -5,10 +5,9 @@ from remi import start, App
 import os
 import threading
 from multiprocessing import Process, Pipe
+import ast
 
-CHANNEL_MAPPING = {2:0, 9:9}
-
-def midi_process(filename, com_port, pipe):
+def midi_process(filename, com_port, pipe, channel_map):
     try:
         ser = serial.Serial(com_port, baudrate=115200)  # open serial port
     except Exception:
@@ -21,8 +20,8 @@ def midi_process(filename, com_port, pipe):
     for msg in mid.play():
         time = time + msg.time
         if (msg.type == "note_on"):
-            if CHANNEL_MAPPING.get(msg.channel) is not None:
-                mapped_ch = CHANNEL_MAPPING[msg.channel]
+            if channel_map.get(msg.channel) is not None:
+                mapped_ch = channel_map[msg.channel]
                 pipe.send([mapped_ch, msg.note, msg.velocity, time, 1000*(time/length)])
                 if ser is not None:               
                     b = bytearray([mapped_ch, msg.note, msg.velocity,ord('\n'),ord('\r')])
@@ -78,17 +77,13 @@ class MyApp(App):
         self.select_music_hbox.append(self.select_music_refresh_btn)
         container.append(self.select_music_hbox)
 
-        # # channel mapping
-        # self.channel_grid_index = gui.HBox(width = '100%', style={'margin':'0px auto'})
-        # # self.channel_grid = gui.HBox(width = '100%', style={'margin':'0px auto'})
-        # self.channel_grid = gui.GridBox()
-        # self.channel_checkboxs = []
-        # for i in range(3):
-        #     self.channel_checkboxs.append(gui.CheckBox())
-        #     self.channel_grid.append({str(i):self.channel_checkboxs[i]})
-        #     self.channel_grid.append({str(i+3):gui.Label(str(i))})
-        # # container.append(self.channel_grid_index)
-        # container.append(self.channel_grid)
+        # channel mapping
+        channel_map_Hbox = gui.HBox(width='100%')
+        channel_map_Hbox.style['font-size'] = '16px'
+        self.channel_map_textbox = gui.TextInput()
+        self.channel_map_textbox.set_value("0:0,9:9")
+        channel_map_Hbox.append([gui.Label("CH Map:", width='40%'), self.channel_map_textbox])
+        container.append(channel_map_Hbox)
 
         # Play/Stop Button
         self.bt = gui.Button('Start', width = '50%', height = '50px')
@@ -133,10 +128,13 @@ class MyApp(App):
             tx, rx = Pipe()         # open a pipe for inter-process communication
             self.pipe = (tx, rx)
             self.is_playing = True
+            channel_map = ast.literal_eval('{' +self.channel_map_textbox.get_value() + '}')
+            print(channel_map)
             self.mthread = threading.Thread(None, self.gui_thread, None)
             self.mprocess = Process(target = midi_process, \
                 args=(self.select_music_dropdown.get_value(), \
-                    self.select_port_dropdown.get_value(), tx))
+                    self.select_port_dropdown.get_value(), \
+                    self.pipe[0], channel_map))
             self.mprocess.start()
             self.mthread.start()
             self.bt.set_text("Stop")
