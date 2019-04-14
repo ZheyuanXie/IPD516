@@ -29,22 +29,16 @@ byte cmd[3];
 int cnt = 0;
 
 void process_incoming_byte(const byte incoming_byte) {
-  switch(incoming_byte) {
-    case '\n':
-      if (cnt == 3) process_midi_command();
-      else PRINT_ERROR;
-      break;
-    case '\r':
-      if (last_incoming_byte == '\n') cnt = 0;
-      else PRINT_ERROR;
-      break;
-    default:
-      if (cnt < 3) {
-        cmd[cnt] = incoming_byte;
-        cnt++;
-      } else PRINT_ERROR;
+  if ((uint8_t)incoming_byte > 127) {
+    cnt = 0;
+    cmd[cnt] = (incoming_byte & 0x0f);
+  } else if (cnt > 3) {
+    PRINT_ERROR;
+  } else {
+    cnt++;
+    cmd[cnt] = incoming_byte;
+    if (cnt == 2) process_midi_command();
   }
-  last_incoming_byte = incoming_byte;
 }
 
 void process_midi_command() {

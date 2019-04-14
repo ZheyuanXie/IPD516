@@ -24,7 +24,7 @@ def midi_process(filename, com_port, pipe, channel_map):
                 mapped_ch = channel_map[msg.channel]
                 pipe.send([mapped_ch, msg.note, msg.velocity, time, 1000*(time/length)])
                 if ser is not None:               
-                    b = bytearray([mapped_ch, msg.note, msg.velocity,ord('\n'),ord('\r')])
+                    b = bytearray([mapped_ch | 0x80, msg.note, msg.velocity])
                     print("channel: %d, note: %d, vel: %d"%(mapped_ch, msg.note, msg.velocity))
                     ser.write(b)
     return
