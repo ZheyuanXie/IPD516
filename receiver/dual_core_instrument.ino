@@ -1,8 +1,9 @@
+
+//byte cmd[3];
 int cnt = 0;
 int count =0;
 /* structure that hold data*/
 typedef struct{
-  byte channel;
   byte note;
   byte vel;
   unsigned long receivedTime;
@@ -17,6 +18,7 @@ TaskHandle_t xTask2;
 void setup() {
   Serial.begin(115200);//one commnicate with midi receiver
   Serial2.begin(115200);//one communucate with Motor or solenoid 
+  
 //  ledcSetup(0, 2000, 8);
 //  ledcAttachPin(32, 0);
 
@@ -79,22 +81,15 @@ void receiveTask( void * parameter )
 void process_incoming_byte(const byte incoming_byte) {
   switch (cnt) {
     case 0:
-      if (incoming_byte > 127) {
-        cmd.channel = incoming_byte - 127;
-        cnt = 1;     
-      }else{
-        cnt = 0;
-      }
-      break;
-    case 1:
       if (incoming_byte <  128) {
           cmd.note = incoming_byte;
-          cnt = 2;      
+          cnt = 1;
+  //        xQueueSendToBack(xQueue, &cmd, 10);      
         }else{
           cnt = 0;
         }      
       break;
-    case 2:
+    case 1:
       cnt = 0;
       if (incoming_byte < 128) {
           cmd.vel = incoming_byte;
