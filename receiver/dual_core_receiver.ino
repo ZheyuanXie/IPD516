@@ -1,30 +1,29 @@
-//#define printerror Serial.println("Error!")
+#define PRINT_ERROR Serial.println("Error!");
+
 #define LED_R 13
 #define LED_Y 12
 #define LED_G 27
-#define LED_W 15//25
+#define LED_W 25
 
-//byte cmd[3];
+byte last_incoming_byte;
+byte cmd[3];
 int cnt = 0;
 int count =0;
 /* structure that hold data*/
 typedef struct{
-  byte channel;
-  byte note;
-  byte vel;
-  unsigned long receivedTime;
+  byte channel1;
+  byte note1;
+  byte vel1;
 }midiMes;
 
-midiMes cmd;
 /* this variable hold queue handle */
 xQueueHandle xQueue;
 TaskHandle_t xTask1;
 TaskHandle_t xTask2;
 
 void setup() {
-//  Serial1.begin(115200,SERIAL_8N1,14,26);//communucate with instrument esp32 
-  Serial2.begin(115200);//commnicate with cc2530
   Serial.begin(115200);
+  Serial2.begin(115200);
   ledcSetup(0, 2000, 8);
   ledcAttachPin(32, 0);
 
@@ -33,7 +32,7 @@ void setup() {
   pinMode(LED_G, OUTPUT);
   pinMode(LED_W, OUTPUT);
   /* create the queue which size can contains 5 elements of Data */
-  xQueue = xQueueCreate(1000, sizeof(midiMes));
+  xQueue = xQueueCreate(20, (3*sizeof(byte)));
 
 //  xTaskCreatePinnedToCore(
 //      sendTask,           /* Task function. */
@@ -54,15 +53,17 @@ void setup() {
 }
 
 void loop() {
-    if (Serial2.available() > 0) {
+  if (Serial2.available() > 0) {
+//      Serial.println(Serial2.read());
       process_incoming_byte(Serial2.read());
-    }  
+  }    
 }
 
 //void sendTask( void * parameter )
 //{
 //  for(;;){
 //    if (Serial2.available() > 0) {
+////      Serial.println(Serial2.read());
 //      process_incoming_byte(Serial2.read());
 //    }
 //  }
@@ -73,61 +74,38 @@ void receiveTask( void * parameter )
   BaseType_t xStatus;
   for(;;)
   {
-    midiMes receivedCmd;
+    byte receivedCmd[3];
   /* keep the status of receiving data */  
     /* receive data from the queue */
     xStatus = xQueueReceive( xQueue, &receivedCmd, 10);
     /* check whether receiving is ok or not */
-    for(;;)
-    {
-      if(xStatus == pdPASS){
-        if((micros()-receivedCmd.receivedTime)>5000000){
-          process_midi_command(receivedCmd);
-          break;
-        }
-      } 
+    if(xStatus == pdPASS){    
+      process_midi_command(receivedCmd);
     }
-  } 
+  }  
   vTaskDelete( NULL );
 }
 
 void process_incoming_byte(const byte incoming_byte) {
-//  Serial1.write(incoming_byte);
-  switch (cnt) {
-    case 0:
-      if (incoming_byte > 127) {
-          cmd.channel = incoming_byte-127;
-          cnt = 1;     
-        }else{
-          cnt = 0;
-        }      
-      break;
-    case 1:
-      if (incoming_byte < 128) {
-          cmd.note = incoming_byte;
-          cnt = 2;      
-        }
-      break;
-    case 2:
-      cnt = 0;
-      if (incoming_byte <  128) {
-          cmd.vel = incoming_byte; 
-          cmd.receivedTime = micros();
-          xQueueSendToBack(xQueue, &cmd, 10);    
-        }      
-      break;
-    default:
-      cnt = 0;
-      break;
-   }
+  if ((uint8_t)incoming_byte > 127) {
+    cnt = 0;
+    cmd[cnt] = (incoming_byte & 0x0f);
+  } else if (cnt > 3) {
+    PRINT_ERROR;
+  } else {
+    cnt++;
+    cmd[cnt] = incoming_byte;
+    if (cnt == 2) process_midi_command(cmd);
+  }
 }
 
-void process_midi_command(midiMes receivedCmd) {
-  uint8_t channel = receivedCmd.channel;
-  uint8_t note = receivedCmd.note;
-  uint8_t vel = receivedCmd.vel;
-  Serial.printf("channel:%d, note:%d, velocity:%d\, count: %d.\n\r", channel, note, vel,count);
-  
+void process_midi_command(byte MIDI[3]) {
+  count = count +1;
+  Serial.printf("channel:%d, note:%d, velocity:%d， #get%d.\n\r", MIDI[0], MIDI[1], MIDI[2],count);
+  uint8_t channel = MIDI[0];
+  uint8_t note = MIDI[1];
+  uint8_t vel = MIDI[2];
+
   // Drumset
   if (channel == 9) {
     if (note > 42 && vel > 0) digitalWrite(LED_R, HIGH);
