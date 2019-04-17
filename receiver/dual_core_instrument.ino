@@ -94,7 +94,7 @@ void process_incoming_byte(const byte incoming_byte) {
       if (incoming_byte < 128) {
           cmd.vel = incoming_byte;
           cnt = 0;
-          cmd.receivedTime
+          cmd.receivedTime = micros();
           xQueueSendToBack(xQueue, &cmd, 10);      
         }
       break;
