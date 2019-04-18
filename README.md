@@ -6,7 +6,7 @@ TODO
 
 ![system](system_diagram.jpg)
 
-## Printed Circuite Board (PCB)
+## Printed Circuit Board (PCB)
 MIDI Receiver             |  MIDI Transmitter
 :-------------------------:|:-------------------------:
 ![pcb_rx](pcb/rx.png)      |  ![pcb_tx](pcb/tx.png)

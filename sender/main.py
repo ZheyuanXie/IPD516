@@ -81,7 +81,7 @@ class MyApp(App):
         channel_map_Hbox = gui.HBox(width='100%')
         channel_map_Hbox.style['font-size'] = '16px'
         self.channel_map_textbox = gui.TextInput()
-        self.channel_map_textbox.set_value("0:0,9:9")
+        self.channel_map_textbox.set_value("0:0,1:1,2:2,3:3,4:4,5:5,6:6,7:7,8:8,9:9")
         channel_map_Hbox.append([gui.Label("CH Map:", width='40%'), self.channel_map_textbox])
         container.append(channel_map_Hbox)
 

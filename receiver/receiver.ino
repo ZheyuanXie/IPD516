@@ -12,6 +12,7 @@
 
 void setup() {
   Serial.begin(115200);
+  Serial1.begin(115200, SERIAL_8N1, 14, 26);
   Serial2.begin(115200);
   
   ledcSetup(0,2000,8);
@@ -70,6 +71,8 @@ void process_midi_command() {
   
   // Piano
   if (channel == get_channel()) {
+    cmd[0] = cmd[0] | 0x80;
+    Serial1.write(cmd, 3);
     if (vel > 0) {
       ledcWriteTone(0, note_to_frequency(note));
     } else {
