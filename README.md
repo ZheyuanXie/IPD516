@@ -1,10 +1,11 @@
-# IPD 516 final project
+# IPD 516 final project (MIDI & SycnTeam)
 Zheyuan Xie, Peng Li
 
 ## Introduction
-TODO
-
+The 
 ![system](system_diagram.jpg)
+
+## Instruemnt Template
 
 ## Printed Circuit Board (PCB)
 MIDI Receiver             |  MIDI Transmitter

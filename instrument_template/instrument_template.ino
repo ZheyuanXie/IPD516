@@ -1,29 +1,42 @@
-/** Declare your global variable here **/
-int inst_id;  // example global variable
+/* ---------------------------------
+ * Declare your global varibale here
+ * --------------------------------- */
 
-/** Implement code for your instrument here **/
+#define BUZZER_PIN 32
+
+/* ----------------------------------
+ * Code for your instrument gose here
+ * ---------------------------------- */
+
 void init_inst(){
-  inst_id = 0;
-  // Let's have a buzzer 
+  // TODO: Initialize your instruemnet here:
   ledcSetup(0,2000,8);
-  ledcAttachPin(32,0);
+  ledcAttachPin(BUZZER_PIN,0);
 }
 
 long expected_delay(uint8_t note, uint8_t velocity, uint8_t last_note) {
-  return 0; 
+  // TODO: Calculate expected delay here:
+  long exp_delay = 0;
+  return exp_delay; 
 }
 
 void note_on(uint8_t note, uint8_t velocity) {
   Serial.printf("Note_on: %d, %d\n", note, velocity);
-  ledcWriteTone(0, note_to_frequency(note));
+  // TODO: Implement NOTE_ON event here:
+  ledcWriteTone(0, note_to_freq(note));
 }
 
 void note_off(uint8_t note) {
   Serial.printf("Note_off: %d\n", note);
+  // TODO: Implement NOTE_OFF event here:
   ledcWriteTone(0, 0);
 }
 
-/** Try not to modify the code below **/
+
+/* --------------------------------
+ * Try not to modify the code below
+ * -------------------------------- */
+
 #define GLOBAL_DELAY 3000000  // global delay in microseconds
 
 /* cmd buffer */
@@ -104,7 +117,7 @@ bool get_cmd() {
   return false;
 }
 
-int note_to_frequency(uint8_t note) {
+int note_to_freq(uint8_t note) {
   switch(note) {
     case 36: return 65;
     case 37: return 69;
