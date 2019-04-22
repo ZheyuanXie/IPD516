@@ -4,9 +4,12 @@ int inst_id;  // example global variable
 /** Implement code for your instrument here **/
 void init_inst(){
   inst_id = 0;
+  // Let's have a buzzer 
+  ledcSetup(0,2000,8);
+  ledcAttachPin(32,0);
 }
 
-long expected_delay(uint8_t note, uint8_t velocity) {
+long expected_delay(uint8_t note, uint8_t velocity, uint8_t last_note) {
   return 0; 
 }
 
@@ -23,14 +26,14 @@ void note_off(uint8_t note) {
 /** Try not to modify the code below **/
 #define GLOBAL_DELAY 3000000  // global delay in microseconds
 
+/* cmd buffer */
+uint8_t cmd_buffer[3];
+
 typedef struct msg_t {
   uint8_t note;
   uint8_t velocity;
   long ts;
 } msg_t;
-
-/* cmd buffer */
-uint8_t cmd_buffer[3];
 
 /* msg queue */
 #define MSG_Q_SIZE 128
@@ -39,11 +42,9 @@ int msg_q_occupy = 0;
 uint8_t msg_q_bmap[MSG_Q_SIZE];
 msg_t msg_q[MSG_Q_SIZE];
 
+uint8_t last_node_played = -1;
+
 void setup() {  
-  // buzzer
-  ledcSetup(0,2000,8);
-  ledcAttachPin(32,0);
-  
   memset(msg_q_bmap, 0, sizeof(msg_q_bmap));
   init_inst();
   Serial.begin(115200);
@@ -54,10 +55,14 @@ void loop() {
   get_cmd();
   for (int i = 0; i < MSG_Q_SIZE; i++) {
     if (msg_q_bmap[i] == 1) {
-      if (micros() - msg_q[i].ts > GLOBAL_DELAY - expected_delay(msg_q[i].note, msg_q[i].velocity)) {
-        if (msg_q[i].velocity > 0) note_on(msg_q[i].note, msg_q[i].velocity);
+      if (micros() - msg_q[i].ts > GLOBAL_DELAY - expected_delay(msg_q[i].note, msg_q[i].velocity, last_node_played)) {
+        if (msg_q[i].velocity > 0) {
+          note_on(msg_q[i].note, msg_q[i].velocity);
+          last_node_played = msg_q[i].note;
+        }
         else note_off(msg_q[i].note);
         msg_q_bmap[i] = 0;
+        msg_q_occupy--;
       }
     }
   }
