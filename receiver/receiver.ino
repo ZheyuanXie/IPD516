@@ -8,6 +8,7 @@
 #define DIP_SWITCH_2 39
 #define DIP_SWITCH_3 34
 #define DIP_SWITCH_4 35
+#define GLOBAL_DELAY 3000000  // global delay in microseconds
 
 #include "esp_task_wdt.h"
 #include "soc/timer_group_struct.h"
@@ -93,7 +94,7 @@ void receiveTask( void * parameter )
     xStatus = xQueueReceive( xQueue, &receivedCmd, 10);
     /* check whether receiving is ok or not */
     if(xStatus == pdPASS){  
-      while ((micros() - receivedCmd.receivedTime)<1000000){
+      while ((micros() - receivedCmd.receivedTime)<GLOBAL_DELAY){
         //feed the dog
         TIMERG0.wdt_wprotect=TIMG_WDT_WKEY_VALUE;
         TIMERG0.wdt_feed=1;
