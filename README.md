@@ -2,8 +2,7 @@
 Zheyuan Xie, Peng Li
 
 ## Introduction
-The 
-![system](system_diagram.jpg)
+![system](system_diagram.png)
 
 ## Instruemnt Template
 
