@@ -9,7 +9,7 @@ TODO
 
 ## Hardware
  - The transmitter module connected to PC sends MIDI bytes to four receiver modules.
- - The receiver modules process the bytes and communicate with the machetronic instrument through a TTL serial interface.
+ - The receiver modules process the bytes and communicate with the machatronic instrument through a TTL serial interface.
 
 MIDI Transmitter PCB          |  MIDI Receiver PCB
 :-------------------------:|:-------------------------:
