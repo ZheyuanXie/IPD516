@@ -16,7 +16,7 @@ MIDI Transmitter PCB          |  MIDI Receiver PCB
 ![pcb_rx](pcb/tx.png)      |  ![pcb_tx](pcb/rx.png)
 
 ## Intruction for Instrument Teams
-As an musical instrument team, you will get a receiver module. You should connect the UART2 port (or another UART port) of your ESP32 to the SER connector (3 male header pins on the right side of the receiver module).
+As a musical instrument team, you will get a receiver module. You should connect the UART2 port (or another UART port) of your ESP32 to the SER connector (3 male header pins on the right side of the receiver module).
 
 The code that runs on your ESP32 should be derived from `insturment_template.ino`. The four functions you will need to implement are:
  - `init_inst`: Initialize your instrument, run only once when system boots.
