@@ -31,7 +31,7 @@ For instrument team who want to test their code that derived from `insturment_te
 - Upload `receiver_test.ino` to the ESP32 that will mount on the MIDI Receiver PCB.
 - Connect your ESP32 to receiver ESP32 
   Instrument ESP32 | Receiver ESP32
-  -----------------|----------------
+  :-----------------:|:----------------:
   RX|TX
   TX|RX
   GND|GND
