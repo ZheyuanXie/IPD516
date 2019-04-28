@@ -5,7 +5,15 @@ Zheyuan Xie, Peng Li
 ![system](system_diagram.png)
 
 ## Software
-TODO
+### Dependency
+ - pyserial
+ - mido
+ - remi
+ 
+You can install these packages using pip:
+```
+pip install pyserial mido remi
+```
 
 ## Hardware
  - The transmitter module connected to PC sends MIDI bytes to four receiver modules.
