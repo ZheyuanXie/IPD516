@@ -16,7 +16,7 @@
 
 //byte cmd[3];
 int cnt = 0;
-int count =0;
+//int count =0;
 /* structure that hold data*/
 typedef struct{
   byte info[3];
@@ -111,7 +111,7 @@ void process_incoming_byte(const byte incoming_byte) {
     cnt = 0;
     cmd.info[cnt] = (incoming_byte & 0x0f);
   } else if (cnt > 3) {
-    PRINT_ERROR;
+    //PRINT_ERROR;
   } else {
     cnt++;
     cmd.info[cnt] = incoming_byte;
@@ -132,8 +132,8 @@ uint8_t get_channel() {
 }
 
 void process_midi_command(byte MIDI[3]) {
-  count = count +1;
-  Serial.printf("channel:%d, note:%d, velocity:%d， #get%d.\n\r", MIDI[0], MIDI[1], MIDI[2],count);
+  //count = count +1;
+  //Serial.printf("channel:%d, note:%d, velocity:%d， #get%d.\n\r", MIDI[0], MIDI[1], MIDI[2],count);
   uint8_t channel = MIDI[0];
   uint8_t note = MIDI[1];
   uint8_t vel = MIDI[2];
