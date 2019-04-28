@@ -30,11 +30,11 @@ The MIDI receiver module issues commands in real time, but in `instrument_templa
 For instrument team who want to test their code that derived from `insturment_template.ino`, you should
 - Upload `receiver_test.ino` to the ESP32 that will mount on the MIDI Receiver PCB.
 - Connect your ESP32 to receiver ESP32 
-  Instrument ESP32 | Receiver ESP32
-  :-----------------:|:----------------:
-  RX|TX
-  TX|RX
-  GND|GND
+Instrument ESP32 | Receiver ESP32
+:-----------------:|:----------------:
+RX   |TX
+TX   |RX
+GND|GND
 - Connent receiver ESP32 to your computer COM port
 - Download `sender` folder and run the python code `main.py` 
 Now the receiver ESP32 is getting MIDI events via USB serial and make sure you choose the right serial COM port.
