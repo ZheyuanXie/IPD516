@@ -40,6 +40,6 @@ GND|GND
 - Download `sender` folder and run the python code `main.py` 
 - Choose the serial COM Port that receiver ESP32 connects to
 - Choose the song that you would like to play
-- Map channels as you desired, for example `2:0,9:9` means map channel 2 to channel 0 and map channel 9 to channel 9, this also means that only MIDI events from channel 2 and channel 9 are sent. If you want MIDI messages from all channel to be received, you need to write `0:0,1:1,2:2,3:3,4:4,5:5,6:6,7:7,8:8,9:9,10:10,11:11,12:12,13:13,14:14,15:15`.
+- Map channels as you desired, for example `2:0,9:9` means map channel 2 to channel 0 and map channel 9 to channel 9, this also means that only MIDI events from channel 2 and channel 9 are sent. If you want MIDI messages from all channel to be received, you need to write `0:0,1:1,2:2,3:3,4:4,5:5,6:6,7:7,8:8,9:9,10:10,11:11,12:12,13:13,14:14,15:15`. You can also map 2 or more channel to one channel, `0:0, 2:0` maps channel 0 and 2 to channel 0.
 
 Now when you hit the start button, the receiver ESP32 should get MIDI events via USB serial and should send MIDI events of channel selected by DIP switch to your instrument ESP32. DIP switch *1* is the most significant bit and *4* is the least significant bit. If *1* is *on*, then channel 8 is selected. If *4* is on, then channel 1 is selected. If *1* and *4* are both on, then channel 9 is selected.
