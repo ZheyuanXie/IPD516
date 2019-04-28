@@ -36,7 +36,7 @@ Instrument ESP32 | Receiver ESP32
 RX   |TX
 TX   |RX
 GND|GND
-- Connent receiver ESP32 to your computer COM port
+- Connect receiver ESP32 to your computer COM port
 - Download `sender` folder and run the python code `main.py` 
 - Choose the serial COM Port that receiver ESP32 connects to
 - Choose the song that you would like to play
