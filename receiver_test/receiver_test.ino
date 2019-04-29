@@ -33,7 +33,7 @@ TaskHandle_t xTask2;
 void setup() {
   Serial.begin(115200);
   Serial1.begin(115200,SERIAL_8N1,14,26);
-  //Serial2.begin(115200);
+  Serial2.begin(115200);
   ledcSetup(0, 2000, 8);
   ledcAttachPin(32, 0);
 
@@ -68,9 +68,15 @@ void setup() {
 }
 
 void loop() {
-  if (Serial.available() > 0) {
+  if (digitalRead(DIP_SWITCH_1)) {
+    if (Serial.available() > 0) {
       process_incoming_byte(Serial.read());
-  }    
+    }
+  } else {
+    if (Serial2.available() > 0) {
+      process_incoming_byte(Serial2.read());
+    }
+  }
 }
 
 //void sendTask( void * parameter )
@@ -126,7 +132,7 @@ void process_incoming_byte(const byte incoming_byte) {
 }
 
 uint8_t get_channel() {
-  uint8_t res = digitalRead(DIP_SWITCH_1) * 8 + digitalRead(DIP_SWITCH_2) * 4 + digitalRead(DIP_SWITCH_3) * 2 + digitalRead(DIP_SWITCH_4);
+  uint8_t res = digitalRead(DIP_SWITCH_2) * 4 + digitalRead(DIP_SWITCH_3) * 2 + digitalRead(DIP_SWITCH_4);
 //  Serial.printf("DIP SWITCH: %d\n", res);
   return res;
 }
