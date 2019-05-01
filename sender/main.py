@@ -120,11 +120,19 @@ class MyApp(App):
     def btn_pressed(self, widget):
         if self.mprocess is not None:
             print("Stop")
+            self.info.set_text("-")
             self.is_playing = False
             self.mthread.join()
             self.mthread = None
         else:
             print("Start")
+            try:
+                ser = serial.Serial(self.select_port_dropdown.get_value(), baudrate=115200)  # open serial port
+                ser.close()
+            except Exception:
+                print("Error Opening Serial.")
+                self.info.set_text("Cannot Open Serial Port")
+                return
             tx, rx = Pipe()         # open a pipe for inter-process communication
             self.pipe = (tx, rx)
             self.is_playing = True
@@ -138,6 +146,7 @@ class MyApp(App):
             self.mprocess.start()
             self.mthread.start()
             self.bt.set_text("Stop")
+            self.info.set_text("Playing: "+self.select_music_dropdown.get_value())
     
     def gui_thread(self):
         for i in range(16):
