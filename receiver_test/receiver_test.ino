@@ -32,7 +32,7 @@ TaskHandle_t xTask2;
 
 void setup() {
   Serial.begin(115200);
-  Serial1.begin(115200,SERIAL_8N1,14,26);
+  Serial1.begin(115200,SERIAL_8N1,26,14);
   Serial2.begin(115200);
   ledcSetup(0, 2000, 8);
   ledcAttachPin(32, 0);
