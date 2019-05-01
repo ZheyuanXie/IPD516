@@ -45,6 +45,7 @@ void setup() {
   pinMode(DIP_SWITCH_2, INPUT);
   pinMode(DIP_SWITCH_3, INPUT);
   pinMode(DIP_SWITCH_4, INPUT);
+  pinMode(2, OUTPUT);
   
   /* create the queue which size can contains 5 elements of Data */
   xQueue = xQueueCreate(2000, (sizeof(midiMes)));
@@ -68,13 +69,16 @@ void setup() {
 }
 
 void loop() {
+//  digitalWrite(2,digitalRead(DIP_SWITCH_1));
   if (digitalRead(DIP_SWITCH_1)) {
+    digitalWrite(2,HIGH);
     if (Serial.available() > 0) {
       process_incoming_byte(Serial.read());
     }
   } else {
+    digitalWrite(2,LOW);
     if (Serial2.available() > 0) {
-      process_incoming_byte(Serial2.read());
+      process_incoming_byte(Serial2.read()); 
     }
   }
 }
@@ -125,7 +129,8 @@ void process_incoming_byte(const byte incoming_byte) {
       cmd.receivedTime = micros();
       xQueueSendToBack(xQueue, &cmd, 10);
       if (cmd.info[0] == get_channel()){
-        Serial1.write(cmd.info,3); 
+        Serial1.write(0x80);
+        Serial1.write(cmd.info+1,2); 
       }
     }
   }
