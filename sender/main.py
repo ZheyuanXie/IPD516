@@ -7,6 +7,13 @@ import threading
 from multiprocessing import Process, Pipe
 import ast
 
+try:
+    os.listdir("song")
+    SONG_DIR = "song/"
+except:
+    SONG_DIR = "sender/song/"
+
+
 def midi_process(filename, com_port, pipe, channel_map):
     try:
         ser = serial.Serial(com_port, baudrate=115200)  # open serial port
@@ -14,7 +21,9 @@ def midi_process(filename, com_port, pipe, channel_map):
         print("Error Opening Serial.")
         ser = None
     print("midi process starting")
-    mid = mido.MidiFile("song/" + filename)
+
+    mid = mido.MidiFile(SONG_DIR + filename)
+
     length = mid.length
     time = 0.0
     for msg in mid.play():
@@ -69,7 +78,7 @@ class MyApp(App):
         self.select_music_dropdown = gui.DropDown()
         self.select_music_refresh_btn = gui.Button(text='R', width='10%', height='80%')
         self.music_list = []
-        for filename in os.listdir("song"):
+        for filename in os.listdir(SONG_DIR):
             self.music_list.append(gui.DropDownItem(filename))
             self.select_music_dropdown.append(self.music_list[-1])
         self.select_music_hbox.append(self.select_music_label)
