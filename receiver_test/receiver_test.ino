@@ -1,5 +1,3 @@
-//#define PRINT_ERROR Serial.println("Error!");
-
 #define LED_R 13
 #define LED_Y 12
 #define LED_G 27
@@ -8,7 +6,7 @@
 #define DIP_SWITCH_2 39
 #define DIP_SWITCH_3 34
 #define DIP_SWITCH_4 35
-#define GLOBAL_DELAY 3000000  // global delay in microseconds
+#define GLOBAL_DELAY 4500000  // global delay in microseconds
 
 #include "esp_task_wdt.h"
 #include "soc/timer_group_struct.h"
@@ -50,14 +48,6 @@ void setup() {
   /* create the queue which size can contains 5 elements of Data */
   xQueue = xQueueCreate(2000, (sizeof(midiMes)));
 
-//  xTaskCreatePinnedToCore(
-//      sendTask,           /* Task function. */
-//      "sendTask",        /* name of task. */
-//      2000,                    /* Stack size of task */
-//      NULL,                     /* parameter of the task */
-//      1,                        /* priority of the task */
-//      &xTask1,                /* Task handle to keep track of created task */
-//      1);                    /* pin task to core 0 */
   xTaskCreatePinnedToCore(
       receiveTask,           /* Task function. */
       "receiveTask",        /* name of task. */
@@ -82,16 +72,6 @@ void loop() {
     }
   }
 }
-
-//void sendTask( void * parameter )
-//{
-//  for(;;){
-//    if (Serial.available() > 0) {
-//      Serial.println(Serial2.read());
-//      process_incoming_byte(Serial2.read());
-//    }
-//  }
-//}
 
 void receiveTask( void * parameter )
 {
@@ -137,14 +117,14 @@ void process_incoming_byte(const byte incoming_byte) {
 }
 
 uint8_t get_channel() {
-  uint8_t res = digitalRead(DIP_SWITCH_2) * 4 + digitalRead(DIP_SWITCH_3) * 2 + digitalRead(DIP_SWITCH_4);
-//  Serial.printf("DIP SWITCH: %d\n", res);
+  uint8_t res = digitalRead(DIP_SWITCH_3) * 2 + digitalRead(DIP_SWITCH_4);
+  // Serial.printf("DIP SWITCH: %d\n", res);
   return res;
 }
 
 void process_midi_command(byte MIDI[3]) {
-  //count = count +1;
-  //Serial.printf("channel:%d, note:%d, velocity:%d， #get%d.\n\r", MIDI[0], MIDI[1], MIDI[2],count);
+  // count = count +1;
+  // Serial.printf("channel:%d, note:%d, velocity:%d， #get%d.\n\r", MIDI[0], MIDI[1], MIDI[2],count);
   uint8_t channel = MIDI[0];
   uint8_t note = MIDI[1];
   uint8_t vel = MIDI[2];
@@ -161,8 +141,8 @@ void process_midi_command(byte MIDI[3]) {
     if (note == 42 && vel == 0) digitalWrite(LED_W, LOW);
   }
 
-  // selected channel
-  if (channel == get_channel()) {
+  // buzzer
+  if (channel == get_channel() && digitalRead(DIP_SWITCH_2)) {
     if (vel > 0) {
       ledcWriteTone(0, note_to_frequency(note));
     } else {
