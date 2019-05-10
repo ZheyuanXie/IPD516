@@ -9,12 +9,13 @@ import ast
 import socket
 
 channel_map_table = {
-    "BEATLES_THE_-_Octopus_s_garden-mod.mid":"?",
-    "Foreplay_From_Long_Time-mhy.mid":"?",
+    "BEATLES_THE_-_Octopus_s_garden-mod.mid":"5:0,2:1,4:2,9:3",
+    "Foreplay_From_Long_Time-mhy.mid":"0:0,1:1,4:2,9:3",
     "John Lee Hooker - Boom Boom Boom-final.mid":"0:0,1:1,8:2,9:3",
     "Led_Zeppelin_-_Good_Times_Bad_Times mod.mid":"?",
-    "Scorpions_-_Rock_You_Like_a_Hurricane.mid":"?",
-    "FoolInTheRainOneString.mid":"1:0,2:1,4:3,10:9"
+    "Scorpions_-_Rock_You_Like_a_Hurricane.mid":"0:0,1:0,6:1,2:2,3:2,9:3",
+    "FoolInTheRainOneString.mid":"1:0,2:1,0:2,9:3",
+    "FoolInTheRainfinal2.mid":"1:0,2:1,0:2,9:3"
 }
 
 try:
@@ -42,11 +43,22 @@ def midi_process(filename, com_port, pipe, channel_map):
         time = time + msg.time
         if (msg.type == "note_on"):
             if (msg.channel == 9):
-                ser.write(bytearray([msg.channel | 0x80, msg.note, msg.velocity]))
+                b = bytearray([msg.channel | 0x80, msg.note, msg.velocity])
+                ser.write(b)
             mapped_ch = channel_map.get(msg.channel)
             if mapped_ch is not None:
+                # print("send")
                 pipe.send([mapped_ch, msg.note, msg.velocity, time, 1000*(time/length)])
-                ser.write(bytearray([mapped_ch | 0x80, msg.note, msg.velocity]))
+                b = bytearray([mapped_ch | 0x80, msg.note, msg.velocity])
+                # print(b)
+                ser.write(b)
+        if (msg.type == "note_off"):
+            if mapped_ch is not None:
+                # print("send")
+                pipe.send([mapped_ch, msg.note, 0, time, 1000*(time/length)])
+                b = bytearray([mapped_ch | 0x80, msg.note, 0])
+                # print(b)
+                ser.write(b)
     return
 
 class MyApp(App):
